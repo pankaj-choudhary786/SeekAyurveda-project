@@ -131,14 +131,14 @@ const Hero = () => {
             Ancient Science • Modern Life
           </motion.p>
 
-          <motion.button
+          <motion.button onClick={() => navigate("/questionnaire")}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 4, duration: 0.8 }}
             className="font-bold px-5 py-2 md:py-3 text-md md:text-lg bg-[#FFFFC7] text-[#286459] 
             rounded-xl shadow-xl hover:scale-101 active:scale-95 transition-all z-30 absolute left-5 bottom-5"
           >
-            Explore Our Prakriti
+            Explore your Prakriti
           </motion.button>
         </div>
       </div>
