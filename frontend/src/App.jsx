@@ -9,7 +9,7 @@ import ContactUs from "./pages/ContactUs.jsx";
 import Login from "./pages/Login.jsx";
 import AyurPantry from "./pages/AyurPantry.jsx";
 import NewsHub from "./pages/NewsHub.jsx";
-
+import Questionnaire from "./pages/Questionnaire.jsx";
 function App() {
   return (
     <BrowserRouter>
@@ -23,6 +23,7 @@ function App() {
           <Route path="vaidya_loc" element={<VaidyaLocator />} />
           <Route path="news_hub" element={<NewsHub />} />
           <Route path="health_track" element={<Health_tracker />} />
+          <Route path="questionnaire" element={<Questionnaire />} />
         </Route>
       </Routes>
     </BrowserRouter>
