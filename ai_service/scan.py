@@ -1,139 +1,106 @@
-import json
-import requests
-import io
-import os
-import numpy as np
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import json, requests, numpy as np, io
 from PIL import Image
 from sahi import AutoDetectionModel 
 from sahi.predict import get_sliced_prediction
 
+app = Flask(__name__)
+CORS(app) 
+
 JSON_FILE = "ayur_pantry.json"
-IMAGE_INPUT = "https://media.gettyimages.com/id/86056648/photo/contents-of-a-refrigerator.jpg?s=612x612&w=gi&k=20&c=3IVcnQnoAf5j1drpIkOXsyvTBUMw9aSshLts-SA_WGo=" 
-CITY_NAME = "Kota"
-API_KEY = "d35ded53f6848bbb681eb07774bc673a" 
+API_KEY = "d35ded53f6848bbb681eb07774bc673a"
+VOCAB, RECIPE_DB = [], []
+DETECTION_MODEL = None
 
-def load_ayurvedic_data(file_path):
-    if not os.path.exists(file_path):
-        print(f" Error: {file_path} not found!")
-        return [], []
-    with open(file_path, 'r') as f:
-        recipes = json.load(f)
-    vocab = sorted(list({ing['name'].strip().upper() for r in recipes for ing in r['ingredients']}))
-    return vocab, recipes
+def load_resources():
+    global VOCAB, RECIPE_DB, DETECTION_MODEL
+    try:
+        with open(JSON_FILE, 'r') as f:
+            RECIPE_DB = json.load(f)
+        VOCAB = sorted(list({ing['name'].strip().upper() for r in RECIPE_DB for ing in r['ingredients']}))
+        
+        # Using SAHI + YOLOv8-world for maximum accuracy on small items
+        DETECTION_MODEL = AutoDetectionModel.from_pretrained(
+            model_type='ultralytics', 
+            model_path='yolov8s-world.pt',
+            confidence_threshold=0.15, # Optimized for pantry items
+            device="cpu"
+        )
+        DETECTION_MODEL.model.set_classes(VOCAB)
+        DETECTION_MODEL.category_mapping = {str(i): name for i, name in enumerate(VOCAB)}
+    except Exception as e:
+        print(f"Init Error: {e}")
 
-def get_image_as_numpy(source):
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-    if source.startswith(('http://', 'https://')):
-        try:
-            response = requests.get(source, headers=headers, timeout=10)
-            img = Image.open(io.BytesIO(response.content)).convert("RGB")
-            return np.array(img)
-        except Exception as e:
-            print(f" Image Download Error: {e}")
-            return None
-    return np.array(Image.open(source).convert("RGB"))
+load_resources()
 
-def get_weather_data():
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={CITY_NAME}&appid={API_KEY}&units=metric"
+def get_weather(lat, lon):
+    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
     try:
         data = requests.get(url, timeout=5).json()
-        temp = data['main']['temp']
-        
-        season = "SUMMER" if temp > 30 else "SPRING" if temp > 20 else "AUTUMN-WINTER"
-        return {"temp": temp, "desc": data['weather'][0]['description'], "season": season}
+        temp = data.get('main', {}).get('temp', 25)
+        season = "SUMMER" if temp > 30 else "SPRING" if temp > 20 else "WINTER"
+        return {
+            "temp": round(temp), 
+            "condition": data.get('weather', [{}])[0].get('main', 'Clear'), 
+            "season": season,
+            "city": data.get('name', 'Your Area')
+        }
     except:
-        return {"temp": "N/A", "desc": "Unknown", "season": "SPRING"}
+        return {"temp": 25, "condition": "Clear", "season": "SPRING", "city": "Default"}
 
-def detect_ingredients(image_array, ingredient_list):
-    detection_model = AutoDetectionModel.from_pretrained(
-        model_type='ultralytics',
-        model_path='yolov8s-world.pt',
-        confidence_threshold=0.10, 
-        device="cpu"
-    )
-    detection_model.model.set_classes(ingredient_list)
-    detection_model.category_mapping = {str(i): name for i, name in enumerate(ingredient_list)}
-
-    result = get_sliced_prediction(
-        image_array,
-        detection_model,
-        slice_height=512,
-        slice_width=512,
-        overlap_height_ratio=0.2
-    )
-
-    found = {}
-    for prediction in result.object_prediction_list:
-        name = prediction.category.name.upper()
-        found[name] = found.get(name, 0) + 1
-    return found
-
-def generate_detailed_report(detected, recipes, weather):
-    print(f"\n" + "="*65)
-    print(f"🌿 SEEK AYURVEDA: DETAILED PANTRY & RECIPE INTELLIGENCE 🌿")
-    print(f"="*65)
-    print(f"Location: {CITY_NAME} | Temp: {weather['temp']}°C ({weather['desc']})")
-    print(f"Current Season Context: {weather['season']}")
-    print(f"-"*65)
-
-    if not detected:
-        print("No Ayurvedic ingredients identified. Try a clearer photo.")
-        return
-
-    print(f" DETECTED INVENTORY ({len(detected)} items):")
-    for item, count in detected.items():
-        benefit = "Natural Balancer"
-        for r in recipes:
-            for i in r['ingredients']:
-                if i['name'].upper() == item:
-                    benefit = i.get('benefit', benefit)
-                    break
-        print(f" • {item.ljust(18)} | Count: {count} | {benefit}")
-
-    print(f"\n" + "="*65)
-    print(f"TOP 8 SUITABLE RECIPES [ Ranked by Match in (%) ]")
-    print(f"="*65)
-
-    current_season = weather['season'].upper()
-    matches = []
-    
-    for recipe in recipes:
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    try:
+        lat, lon = request.form.get('lat', 26.4499), request.form.get('lon', 75.8175)
+        found = {}
+        file = request.files.get('image')
         
-        recipe_seasons = [s.strip().upper() for s in recipe.get('season', [])]
-        req_set = {i['name'].strip().upper() for i in recipe['ingredients']}
-        detected_set = set(detected.keys())
+        # SAHI Vision Processing for high accuracy
+        if file:
+            img = Image.open(file.stream).convert("RGB")
+            result = get_sliced_prediction(
+                np.array(img), 
+                DETECTION_MODEL, 
+                slice_height=512, 
+                slice_width=512,
+                overlap_height_ratio=0.2 # Ensures ingredients on edges aren't missed
+            )
+            for p in result.object_prediction_list:
+                found[p.category.name.upper()] = 1
         
-        have = list(detected_set.intersection(req_set))
-        missing = list(req_set - detected_set)
-        
-        score = len(have) / len(req_set) if req_set else 0
-        if score > 0:
-            matches.append({
-                "title": recipe['title'],
-                "score": score,
-                "have": have,
-                "missing": missing,
-                "method": recipe['Method'],
-                "is_seasonal": current_season in recipe_seasons
-            })
+        text_input = request.form.get('text', "")
+        if text_input:
+            for item in text_input.split(','):
+                found[item.strip().upper()] = 1
 
-    sorted_matches = sorted(matches, key=lambda x: (x['score'], x['is_seasonal']), reverse=True)
+        weather = get_weather(lat, lon)
+        matches = []
 
-    for i, res in enumerate(sorted_matches[:8], 1):
-        match_pct = int(res['score']*100)
-    
-        tag = "SEASONAL MATCH" if res['is_seasonal'] else " ALL-SEASON / NEUTRAL"
-        
-        print(f"\n{i}. {res['title'].upper()}")
-        print(f"   Score: {match_pct}% | {tag}")
-        print(f"   We Have: {', '.join(res['have'])}")
-        print(f"   Need further: {', '.join(res['missing']) if res['missing'] else 'None (Ready!)'}")
-        print(f"   Recipe: {res['method'][:140]}...")
+        for recipe in RECIPE_DB:
+            req = {i['name'].strip().upper() for i in recipe['ingredients']}
+            have = list(set(found.keys()).intersection(req))
+            base_score = len(have) / len(req) if req else 0
+            
+            if base_score > 0:
+                # Add Season Match Accuracy Bonus
+                is_seasonal = weather['season'] in [s.upper() for s in recipe.get('season', [])]
+                final_score = min(base_score + (0.1 if is_seasonal else 0), 1.0)
+                
+                matches.append({
+                    "title": recipe['title'],
+                    "score": final_score,
+                    "have": [h.capitalize() for h in have],
+                    "missing": [m.capitalize() for m in list(req - set(have))],
+                    "method": " ".join(recipe['Method']) if isinstance(recipe['Method'], list) else recipe['Method']
+                })
 
-if __name__ == "__main__":
-    vocab, recipe_db = load_ayurvedic_data(JSON_FILE)
-    img_data = get_image_as_numpy(IMAGE_INPUT)
-    if img_data is not None:
-        weather_info = get_weather_data()
-        found_ings = detect_ingredients(img_data, vocab)
-        generate_detailed_report(found_ings, recipe_db, weather_info)
+        # Rank by match percentage
+        top = sorted(matches, key=lambda x: x['score'], reverse=True)[0] if matches else None
+
+        return jsonify({"top_recipe": top, "weather_info": weather})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5001)
