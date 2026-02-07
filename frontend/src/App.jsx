@@ -27,6 +27,7 @@ function App() {
           <Route path="vaidya_loc" element={<VaidyaLocator />} />
           <Route path="news_hub" element={<NewsHub />} />
           <Route path="health_track" element={<Health_tracker />} />
+          <Route path="questionnaire" element={<Questionnaire />} />
         </Route>
 
       </Routes>
