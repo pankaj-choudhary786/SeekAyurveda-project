@@ -57,7 +57,7 @@ const AyurPantry = () => {
 
   return (
     <div className="min-h-screen bg-[#FFE4BB] flex flex-col items-center font-poppins pb-10">
-      <header className="relative flex items-center justify-center bg-[#286459] h-14 w-[94%] max-w-7xl rounded-full px-6 mt-6 shadow-xl z-20">
+      <header className="relative flex items-center justify-center bg-[#286459] h-14 w-[94%] max-w-7xl rounded-full px-6 mt-20 shadow-xl z-20">
         <h1 className="text-base md:text-lg text-white font-bold tracking-[0.2em] uppercase italic">
           Ayur Pantry
         </h1>
