@@ -3,20 +3,24 @@ import FeatureCard from "./FeatureCard";
 import maggi from "../assets/maggi.png";
 import { useNavigate } from "react-router";
 import ChatbotButton from "./ChatbotButton";
-
+import Ayurpantry from "../assets/Ayurpantry.jpeg";
+import healthTracker from "../assets/healthTracker.jpeg";
+import newsHub from "../assets/newshub.jpeg";
+import Ayursaathi from "../assets/Ayursaathi.jpeg";
+import Locator from "../assets/Locator.jpeg";
 const OurFeatures = () => {
   const navigate = useNavigate();
   const [showChat, setShowChat] = useState(false);
 
   const features = [
     {
-      image: maggi,
+      image: Locator,
       heading: "Vaidya Locator",
       content: "Find the ayurved doctor near me",
       link: "/vaidya_loc",
     },
     {
-      image: maggi,
+      image: Ayurpantry,
       heading: "Ayur Pantry",
       content: "Click your ingredients to get meals suggestion basesd on season",
       link: "/ayur_pantry",
@@ -28,19 +32,19 @@ const OurFeatures = () => {
       link: "/product_scan",
     },
     {
-      image: maggi,
+      image: healthTracker,
       heading: "Health Tracker",
       content: "Track your mental health",
       link: "/health_track",
     },
     {
-      image: maggi,
+      image: newsHub,
       heading: "News Hub",
       content: "Get the latest ayurveda news",
       link: "/news_hub",
     },
     {
-      image: maggi,
+      image: Ayursaathi,
       heading: "Ayur Saathi",
       content: "Chat with your personal ayurvedic assistant",
       link: "/ayur_saathi",
