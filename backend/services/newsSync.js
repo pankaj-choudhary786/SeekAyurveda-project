@@ -42,7 +42,7 @@ export const syncNews = async () => {
 
       try {
         await News.updateOne(
-          { url: article.url }, // ✅ correct dedup key
+          { url: article.url }, 
           {
             title: article.title,
             description: article.description,
