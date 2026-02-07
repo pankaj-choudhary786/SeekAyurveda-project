@@ -71,9 +71,11 @@ const ContactUs = () => {
                 >
                   Send Message
                 </button>
-                
+
                 <div className="hidden lg:flex flex-col">
-                  <span className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Inquiries</span>
+                  <span className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">
+                    Inquiries
+                  </span>
                   <span className="text-xs font-bold">hi@seekayurveda.com</span>
                 </div>
               </div>
