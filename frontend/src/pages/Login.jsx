@@ -12,7 +12,9 @@ const Login = () => {
         <div className="flex flex-col justify-center items-center p-8 lg:p-16">
           <div className="w-full max-w-md space-y-6">
             <header>
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">Sign In</h1>
+              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
+                Sign In
+              </h1>
               <p className="text-sm lg:text-base font-medium mt-2">
                 Don't have an account yet?{" "}
                 <button
@@ -68,7 +70,9 @@ const Login = () => {
 
               <div className="flex justify-center items-center gap-4 my-6">
                 <hr className="flex-grow border-t border-gray-200" />
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Or continue with</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Or continue with
+                </p>
                 <hr className="flex-grow border-t border-gray-200" />
               </div>
 
@@ -77,18 +81,27 @@ const Login = () => {
                 className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 py-3 rounded-lg ring-1 ring-gray-300 transition-colors"
               >
                 <img src={google} alt="Google" className="h-5 w-auto" />
-                <span className="text-sm font-semibold">Sign in with Google</span>
+                <span className="text-sm font-semibold">
+                  Sign in with Google
+                </span>
               </button>
 
               <p className="text-xs text-center text-gray-500 pt-4 leading-relaxed">
                 By signing in or creating new account, you are agreeing to our{" "}
-                <button type="button" className="text-[#2c60d1] hover:underline font-semibold">
+                <button
+                  type="button"
+                  className="text-[#2c60d1] hover:underline font-semibold"
+                >
                   Terms & Conditions
                 </button>{" "}
                 and{" "}
-                <button type="button" className="text-[#2c60d1] hover:underline font-semibold">
+                <button
+                  type="button"
+                  className="text-[#2c60d1] hover:underline font-semibold"
+                >
                   Privacy Policy
-                </button>.
+                </button>
+                .
               </p>
             </form>
           </div>
@@ -98,12 +111,13 @@ const Login = () => {
           <div className="text-center space-y-6">
             <h2 className="text-4xl font-bold">Welcome To SeekAyurveda</h2>
             <p className="max-w-md mx-auto text-gray-100 opacity-80">
-              Discover the ancient wisdom of healing and balance for your modern lifestyle.
+              Discover the ancient wisdom of healing and balance for your modern
+              lifestyle.
             </p>
-            <img 
-              src={meditate} 
-              alt="Hero" 
-              className="max-w-md w-full mx-auto rounded-3xl drop-shadow-2xl" 
+            <img
+              src={meditate}
+              alt="Hero"
+              className="max-w-md w-full mx-auto rounded-3xl drop-shadow-2xl"
             />
           </div>
         </div>
