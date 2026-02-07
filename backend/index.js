@@ -10,25 +10,25 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+
 app.use(cors());
 app.use(express.json());
 
-// Routes
+
 app.use("/api/news", newsRoutes);
 
-// Health check (recommended)
+
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Connect to database and start server
+
 const startServer = async () => {
   try {
-    // Connect to database first
+    
     await connectDB();
     
-    // Start cron job after DB connection
+    
     startNewsCron();
     
     const PORT = process.env.PORT || 5000;
