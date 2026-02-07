@@ -1,3 +1,4 @@
+import React from 'react'
 import { useEffect, useState } from "react";
 import NewsCard from "../components/NewsCard";
 import Header from "../components/Header";
@@ -75,3 +76,4 @@ export default function NewsHub() {
     </>
   );
 }
+

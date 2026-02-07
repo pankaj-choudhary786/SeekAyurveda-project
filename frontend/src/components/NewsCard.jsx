@@ -23,7 +23,7 @@ export default function NewsCard({ article }) {
         </span>
 
         {/* Title */}
-        <h3 className="text-base font-semibold text-white leading-snug line-clamp-2">
+        <h3 className="text-base font-semibold leading-snug line-clamp-2">
           {article.title}
         </h3>
 
