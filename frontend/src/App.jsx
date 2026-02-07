@@ -1,3 +1,5 @@
+
+
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./lenis.js";
 import HomeLayout from "./components/HomeLayout.jsx";
@@ -10,10 +12,12 @@ import Login from "./pages/Login.jsx";
 import AyurPantry from "./pages/AyurPantry.jsx";
 import NewsHub from "./pages/NewsHub.jsx";
 
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<HomeLayout />}>
           <Route index element={<Home />} />
@@ -24,6 +28,7 @@ function App() {
           <Route path="news_hub" element={<NewsHub />} />
           <Route path="health_track" element={<Health_tracker />} />
         </Route>
+
       </Routes>
     </BrowserRouter>
   );
