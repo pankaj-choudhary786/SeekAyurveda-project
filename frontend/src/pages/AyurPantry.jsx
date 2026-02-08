@@ -1,182 +1,226 @@
-import React, { useRef, useState, useEffect } from "react";
-import axios from "axios";
-import { MdWbSunny, MdCloud, MdOutlineAcUnit, MdLocationOn } from "react-icons/md";
-import { GoAlertFill, GoCheckCircleFill, GoTrophy } from "react-icons/go";
-import { IoClose, IoCameraOutline, IoCloudUploadOutline } from "react-icons/io5";
-import default_img from "../assets/default.png";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import UserAssessment from "./UserAssessment";
+import Sidebar from "../components/Sidebar"; // Adjust path if needed
+import { Book, Send, Activity, Smile, Frown } from "lucide-react";
 
-const AyurPantry = () => {
-  const [result, setResult] = useState({
-    analysis: null,
-    weather: { temp: "--", condition: "Waiting", season: "Loading", city: "Detecting..." }
-  });
-  const [previewImage, setPreviewImage] = useState(default_img);
-  const [cameraOpen, setCameraOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [inputMode, setInputMode] = useState("image");
-  const [textInput, setTextInput] = useState("");
-  const uploadRef = useRef(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+const HealthTracker = () => {
+  const [showAssessment, setShowAssessment] = useState(false);
+  const [moodScore, setMoodScore] = useState(7);
+  const [note, setNote] = useState("");
+  const navigate = useNavigate();
 
-  const handleAnalysis = async (imageFile = null) => {
-    setLoading(true);
-    const runAnalysis = async (latitude, longitude) => {
-      const formData = new FormData();
-      if (imageFile) formData.append('image', imageFile);
-      if (textInput && inputMode === "text") formData.append('text', textInput);
-      formData.append('lat', latitude);
-      formData.append('lon', longitude);
-      try {
-        const res = await axios.post('http://localhost:5001/analyze', formData);
-        setResult({ analysis: res.data.top_recipe, weather: res.data.weather_info });
-      } catch (err) { console.error(err); } finally { setLoading(false); }
-    };
+  // === 1. AUTHENTICATION CHECK ===
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // If user is NOT logged in, redirect immediately to login page
+      navigate("/login");
+    }
+  }, [navigate]);
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => runAnalysis(pos.coords.latitude, pos.coords.longitude),
-        () => runAnalysis(26.4499, 75.8175)
-      );
-    } else { runAnalysis(26.4499, 75.8175); }
+  const weeklyData = [
+    { day: "M", score: 6 },
+    { day: "T", score: 8 },
+    { day: "W", score: 5 },
+    { day: "T", score: 7 },
+    { day: "F", score: 4 },
+    { day: "S", score: 8 },
+    { day: "S", score: 9 },
+  ];
+
+  const getPoints = () => {
+    const width = 100;
+    const height = 60;
+    const gap = width / (weeklyData.length - 1);
+    return weeklyData
+      .map((d, i) => {
+        const x = i * gap;
+        const y = height - (d.score / 10) * height;
+        return `${x},${y}`;
+      })
+      .join(" ");
   };
 
   return (
-    <div className="min-h-screen bg-[#FFE4BB] flex flex-col items-center font-poppins pb-10">
-      <header className="relative flex items-center justify-center bg-[#286459] h-14 w-[94%] max-w-7xl rounded-full px-6 mt-6 shadow-xl z-20 text-white font-bold tracking-[0.2em] uppercase italic">
-        Ayur Pantry AI
-      </header>
+    <div className="flex min-h-screen bg-[#FFE4BB]">
+      {/* === 2. SIDEBAR INTEGRATION === */}
+      <Sidebar />
 
-      <main className="w-full max-w-7xl px-4 mt-10">
-        <div className="w-full bg-[#122b27]/85 backdrop-blur-3xl rounded-[3rem] p-6 md:p-12 border border-white/10 shadow-2xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            {/* SCANNER SECTION */}
-            <section className="lg:col-span-4 flex flex-col">
-              <div className="bg-[#2a4d45]/40 rounded-[2.5rem] p-8 border border-white/10 flex flex-col h-full shadow-lg">
-                <h2 className="text-white font-bold text-xl mb-8 border-b border-white/10 pb-4">Ingredients Scan</h2>
-                <div className="flex p-1.5 bg-black/20 rounded-2xl mb-8">
-                  <button onClick={() => setInputMode("image")} className={`flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${inputMode === "image" ? "bg-white text-[#122b27]" : "text-white/40"}`}>IMAGE MODE</button>
-                  <button onClick={() => setInputMode("text")} className={`flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${inputMode === "text" ? "bg-white text-[#122b27]" : "text-white/40"}`}>TEXT LIST</button>
-                </div>
-                <div className="flex-grow">
-                  {inputMode === "image" ? (
-                    <div className="space-y-6">
-                      <div className="relative aspect-square rounded-[1.5rem] overflow-hidden border border-white/10 bg-black/20">
-                        <img src={previewImage} className="w-full h-full object-cover" alt="Preview" />
-                        {loading && <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-white text-[10px] font-black animate-pulse">ANALYZING...</div>}
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => setCameraOpen(true)} className="bg-white/5 text-white py-4 rounded-2xl border border-white/10 font-bold text-[11px] uppercase tracking-widest hover:bg-white/10">Camera</button>
-                        <button onClick={() => uploadRef.current.click()} className="bg-white/5 text-white py-4 rounded-2xl border border-white/10 font-bold text-[11px] uppercase tracking-widest hover:bg-white/10">Upload</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <textarea className="w-full h-[250px] bg-black/20 border border-white/10 rounded-2xl p-6 text-white text-sm outline-none" placeholder="Ginger, Honey, Turmeric..." value={textInput} onChange={(e) => setTextInput(e.target.value)} />
-                  )}
-                </div>
-                <button disabled={loading} onClick={() => handleAnalysis()} className="w-full mt-6 bg-[#FFE4BB] text-[#122b27] py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-[#ffd99d]">
-                  {loading ? "Processing..." : "Find Best Match"}
-                </button>
-              </div>
-            </section>
+      {/* Main Content Wrapper - Added ml-64 to push content right of sidebar */}
+      <main className="flex-1 ml-64 flex flex-col items-center pt-8 pb-8 px-6 lg:px-12">
+        {/* Header */}
+        <header className="mt-20 relative flex items-center justify-between bg-[#286459] h-14 w-full max-w-7xl rounded-full px-5 mb-8 shadow-sm z-20 shrink-0">
+          <h1 className="text-lg lg:text-xl text-white poppins font-semibold tracking-wide">
+            Health Tracker
+          </h1>
+          <button
+            onClick={() => setShowAssessment(true)}
+            className="bg-red-700 hover:bg-red-800 text-white px-4 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+          >
+            <span className="hidden sm:inline">Take Assessment</span>
+            <span className="sm:hidden">Assess</span>
+            <Book size={18} />
+          </button>
+        </header>
 
-            {/* DATA SECTION */}
-            <section className="lg:col-span-8 flex flex-col gap-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Weather Card */}
-                <div className="bg-[#2a4d45]/40 rounded-[2.5rem] p-10 border border-white/10 flex justify-between items-center shadow-xl">
-                  <div>
-                    <p className="text-[#FFE4BB]/40 text-[10px] font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><MdLocationOn /> {result.weather?.city}</p>
-                    <h3 className="text-white text-6xl font-black tracking-tighter">{result.weather?.temp}°C</h3>
-                    <p className="text-white/80 font-bold text-xs uppercase mt-4 tracking-widest">{result.weather?.condition} • {result.weather?.season}</p>
-                  </div>
-                  <div className="bg-white/5 p-6 rounded-[2rem] text-6xl text-yellow-400"><MdWbSunny /></div>
-                </div>
-
-                {/* Score Card */}
-                <div className="bg-[#FFE4BB] rounded-[2.5rem] p-10 flex flex-col items-center justify-center border-4 border-[#243d37] shadow-2xl">
-                  <p className="text-[#243d37]/50 text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-center">COMPATIBILITY SCORE</p>
-                  <h3 className="text-[#122b27] text-7xl font-black tracking-tighter">{result.analysis ? Math.round(result.analysis.score * 100) : "0"}<span className="text-2xl">%</span></h3>
-                  <div className="mt-4 px-6 py-2 bg-[#243d37] text-[#FFE4BB] rounded-full text-[10px] font-black uppercase tracking-widest">Agni Balance</div>
-                </div>
+        {/* Dashboard Grid */}
+        <section className="w-full flex justify-center grow">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-7xl min-h-[600px]">
+            {/* Mood Trends Chart */}
+            <div className="w-full rounded-xl bg-white/40 backdrop-blur-md border border-white/50 p-6 flex flex-col shadow-sm min-h-[350px]">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-[#286459] font-bold text-lg flex items-center gap-2">
+                  <Activity size={20} /> Mood Trends
+                </h2>
+                <span className="text-xs font-medium bg-[#286459]/10 text-[#286459] px-2 py-1 rounded-full">
+                  Last 7 Days
+                </span>
               </div>
 
-              {/* Protocol Display - UPDATED FOR 3 BOXES */}
-              <div className="bg-[#FFFFC7]/90 rounded-[3rem] p-10 md:p-12 border border-white/10 shadow-2xl flex-grow">
-                <div className="mb-10">
-                  <span className="text-black/40 text-[10px] font-black uppercase tracking-[0.4em] block mb-2">Ayurvedic Protocol</span>
-                  <h3 className="text-black text-4xl font-bold uppercase italic leading-tight">{result.analysis?.title || "Waiting for Scan"}</h3>
+              <div className="flex-1 flex flex-col justify-end relative pb-6 px-2 min-h-[200px]">
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 z-0 pb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="border-b border-black w-full h-full"
+                    ></div>
+                  ))}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* BOX 1: WHAT WE FOUND (THE MATCHES) */}
-                  <div className="bg-black/5 p-6 rounded-[2rem] border-l-4 border-blue-600/50">
-                    <h4 className="text-black/50 text-[10px] uppercase font-black mb-4 flex items-center gap-2"><GoTrophy /> Detected in Recipe</h4>
-                    <p className="text-black/70 text-xs font-bold leading-relaxed">
-                      {result.analysis?.have?.length > 0 ? result.analysis.have.join(", ") : "No matches detected yet."}
-                    </p>
-                  </div>
+                <svg
+                  viewBox="0 0 100 60"
+                  className="w-full h-full overflow-visible z-10"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="#286459" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#286459" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <polygon
+                    fill="url(#gradient)"
+                    points={`0,60 ${getPoints()} 100,60`}
+                  />
+                  <polyline
+                    fill="none"
+                    stroke="#286459"
+                    strokeWidth="2"
+                    points={getPoints()}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  {weeklyData.map((d, i) => (
+                    <circle
+                      key={i}
+                      cx={(i * 100) / (weeklyData.length - 1)}
+                      cy={60 - (d.score / 10) * 60}
+                      r="1.5"
+                      fill="#fff"
+                      stroke="#286459"
+                      strokeWidth="1"
+                      className="hover:r-2 transition-all"
+                    />
+                  ))}
+                </svg>
 
-                  {/* BOX 2: WHY IT'S GOOD */}
-                  <div className="bg-black/5 p-6 rounded-[2rem] border-l-4 border-green-600/50">
-                    <h4 className="text-black/50 text-[10px] uppercase font-black mb-4 flex items-center gap-2"><GoCheckCircleFill /> Why it's good</h4>
-                    <p className="text-black/70 text-xs font-medium leading-relaxed">
-                      {result.analysis ? `Corrects imbalances for ${result.weather.season}.` : "Scan to see impact."}
-                    </p>
-                  </div>
-
-                  {/* BOX 3: MISSING */}
-                  <div className="bg-black/5 p-6 rounded-[2rem] border-l-4 border-red-600/50">
-                    <h4 className="text-black/50 text-[10px] uppercase font-black mb-4 flex items-center gap-2"><GoAlertFill /> Missing Items</h4>
-                    <p className="text-black/70 text-xs font-medium leading-relaxed">
-                      {result.analysis?.missing?.length > 0 ? result.analysis.missing.join(", ") : "All items found!"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Preparation Steps Box */}
-                <div className="bg-white/40 p-10 mt-8 rounded-[2.5rem] border border-black/5">
-                  <h4 className="text-black/30 font-black text-[10px] uppercase tracking-[0.3em] mb-4">Preparation Protocol</h4>
-                  <p className="text-black text-[15px] italic leading-relaxed font-medium">
-                    {result.analysis?.method || "Please scan your pantry to unlock tailored steps."}
-                  </p>
+                <div className="flex justify-between mt-2 text-xs text-gray-600 font-medium">
+                  {weeklyData.map((d, i) => (
+                    <span key={i}>{d.day}</span>
+                  ))}
                 </div>
               </div>
-            </section>
-          </div>
-        </div>
-      </main>
 
-      <input type="file" ref={uploadRef} hidden accept="image/*" onChange={(e) => {
-        if (!e.target.files[0]) return;
-        setPreviewImage(URL.createObjectURL(e.target.files[0]));
-        handleAnalysis(e.target.files[0]);
-      }} />
+              <div className="mt-4 p-3 bg-[#FFE4BB]/50 rounded-lg text-xs text-[#286459] text-center">
+                Your average mood is <strong>7.1/10</strong> this week. Keep it
+                up!
+              </div>
+            </div>
 
-      {cameraOpen && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-6">
-          <div className="bg-white/5 border border-white/10 rounded-[4rem] p-4 max-w-md w-full relative">
-            <video ref={videoRef} autoPlay playsInline className="w-full aspect-square object-cover rounded-[3.5rem]" />
-            <div className="flex gap-4 p-8">
-              <button onClick={() => {
-                const canvas = document.createElement("canvas");
-                canvas.width = videoRef.current.videoWidth;
-                canvas.height = videoRef.current.videoHeight;
-                canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
-                canvas.toBlob((blob) => {
-                  setPreviewImage(URL.createObjectURL(blob));
-                  handleAnalysis(blob);
-                  setCameraOpen(false);
-                }, "image/jpeg", 0.95);
-              }} className="flex-1 bg-white text-[#122b27] py-5 rounded-3xl font-black uppercase text-xs tracking-widest">Capture & Scan</button>
-              <button onClick={() => setCameraOpen(false)} className="bg-white/10 text-white px-8 rounded-3xl border border-white/10 flex items-center justify-center"><IoClose size={28} /></button>
+            {/* Daily Check-in */}
+            <div className="w-full rounded-xl bg-white/40 backdrop-blur-md border border-white/50 p-6 flex flex-col shadow-sm h-full">
+              <h2 className="text-[#286459] font-bold text-lg mb-1">
+                Daily Check-in
+              </h2>
+              <p className="text-xs text-gray-500 mb-6">
+                How are you feeling right now?
+              </p>
+
+              <div className="flex-1 flex flex-col gap-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center px-2">
+                    <Frown
+                      className={`transition-colors ${moodScore < 4 ? "text-red-500" : "text-gray-400"}`}
+                      size={24}
+                    />
+                    <span className="text-3xl font-bold text-[#286459]">
+                      {moodScore}
+                    </span>
+                    <Smile
+                      className={`transition-colors ${moodScore > 7 ? "text-green-600" : "text-gray-400"}`}
+                      size={24}
+                    />
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={moodScore}
+                    onChange={(e) => setMoodScore(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#286459]"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Stressed</span>
+                    <span>Neutral</span>
+                    <span>Happy</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-[#286459] block mb-2">
+                    Feeling...
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Anxious", "Calm", "Tired", "Energetic", "Focused"].map(
+                      (tag) => (
+                        <button
+                          key={tag}
+                          className="px-3 py-1 rounded-full text-xs border border-[#286459]/30 hover:bg-[#286459] hover:text-white transition-colors text-[#286459]"
+                        >
+                          {tag}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-1 min-h-[100px]">
+                  <label className="text-xs font-semibold text-[#286459] block mb-2">
+                    Notes
+                  </label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Anything on your mind? (Sleep quality, diet, etc.)"
+                    className="w-full h-full bg-white/50 border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#286459] resize-none"
+                  />
+                </div>
+              </div>
+
+              <button className="mt-4 w-full bg-[#286459] hover:bg-[#205047] text-white py-3 rounded-xl font-semibold shadow-md flex justify-center items-center gap-2 transition-all active:scale-95">
+                <span>Log Entry</span>
+                <Send size={16} />
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        </section>
+
+        {showAssessment && (
+          <UserAssessment onClose={() => setShowAssessment(false)} />
+        )}
+      </main>
     </div>
   );
 };
 
-export default AyurPantry;
+export default HealthTracker;
