@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import heroImg from "../assets/heroImage.jpeg";
+import { useNavigate } from "react-router";
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex mt-17 justify-center h-[88vh] font-sans">
       <div className="relative w-full h-[88vh] md:h-[91vh] lg:h-[88vh] mx-1 my-3 md:mx-3 rounded-4xl overflow-hidden border border-white/10 shadow-2xl bg-black z-[10]">
@@ -11,9 +14,9 @@ const Hero = () => {
           alt="heroImg"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
- 
+
         <div className="absolute inset-0 backdrop-blur-[1px] z-10 pointer-events-none" />
- 
+
         <div className="relative z-30 h-full flex flex-col items-center justify-center px-6">
           <div className="relative w-full max-w-4xl">
             <svg
@@ -36,7 +39,7 @@ const Hero = () => {
                   </text>
                 </clipPath>
               </defs>
- 
+
               <motion.rect
                 x="0"
                 y="0"
@@ -48,7 +51,7 @@ const Hero = () => {
                 fill="#FFFFC7"
                 clipPath="url(#textClip)"
               />
- 
+
               <text
                 x="50%"
                 y="50%"
@@ -56,8 +59,8 @@ const Hero = () => {
                 dominantBaseline="middle"
                 fill="none"
                 stroke="#FFFFC7"
-                strokeWidth="1" 
-                strokeOpacity="0.4" 
+                strokeWidth="1"
+                strokeOpacity="0.4"
                 style={{
                   fontFamily: "'Sacramento', cursive",
                   fontSize: "120px",
@@ -96,6 +99,7 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 4, duration: 0.8 }}
             className="font-bold px-5 py-2 md:py-3 text-md md:text-lg bg-[#FFFFC7] text-[#286459] rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all z-30 absolute left-5 bottom-5"
+            onClick={() => navigate("/questionnaire")}
           >
             Explore Our Prakriti
           </motion.button>

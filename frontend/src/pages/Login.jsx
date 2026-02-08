@@ -1,9 +1,43 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../api";
 import google from "../assets/google.png";
 import meditate from "../assets/loginHero.png";
 
 const Login = () => {
-  const handleSubmit = (e) => {
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
+    try {
+      const { data } = await loginUser({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // 1. Save token and user info to Local Storage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // 2. REDIRECT TO DASHBOARD (Changed from "/" to "/dashboard")
+      navigate("/dashboard");
+
+      // Optional: Refresh page to update Header state immediately
+      window.location.reload();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Login failed. Please check your credentials.",
+      );
+    }
   };
 
   return (
@@ -20,11 +54,19 @@ const Login = () => {
                 <button
                   type="button"
                   className="text-[#1e4a42] font-semibold hover:underline"
+                  onClick={() => navigate("/signup")}
                 >
                   Sign up here
                 </button>
               </p>
             </header>
+
+            {/* Error Message Display */}
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -37,12 +79,15 @@ const Login = () => {
                   autoComplete="email"
                   placeholder="Enter email address"
                   className="w-full p-3 rounded-lg ring-1 ring-black/10 focus:ring-2 focus:ring-[#1e4a42] outline-none transition-all"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label htmlFor="pwd" className="font-medium text-sm">
+                  <label htmlFor="password" className="font-medium text-sm">
                     Password
                   </label>
                   <button
@@ -53,11 +98,14 @@ const Login = () => {
                   </button>
                 </div>
                 <input
-                  id="pwd"
+                  id="password"
                   type="password"
                   autoComplete="current-password"
                   placeholder="Enter password"
                   className="w-full p-3 rounded-lg ring-1 ring-black/10 focus:ring-2 focus:ring-[#1e4a42] outline-none transition-all"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
                 />
               </div>
 

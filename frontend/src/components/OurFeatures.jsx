@@ -17,7 +17,7 @@ const OurFeatures = () => {
       image: Locator,
       heading: "Vaidya Locator",
       content: "Find the ayurved doctor near me",
-      link: "/vaidloc",
+      link: "/vaidya_loc",
     },
     {
       image: Ayurpantry,

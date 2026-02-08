@@ -1,5 +1,3 @@
-
-
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./lenis.js";
 import HomeLayout from "./components/HomeLayout.jsx";
@@ -11,14 +9,16 @@ import ContactUs from "./pages/ContactUs.jsx";
 import Login from "./pages/Login.jsx";
 import AyurPantry from "./pages/AyurPantry.jsx";
 import NewsHub from "./pages/NewsHub.jsx";
-
+import Questionnaire from "./pages/Questionnare.jsx";
+import Signup from "./pages/SignUp.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/" element={<HomeLayout />}>
           <Route index element={<Home />} />
           <Route path="contact" element={<ContactUs />} />
@@ -28,8 +28,8 @@ function App() {
           <Route path="news_hub" element={<NewsHub />} />
           <Route path="health_track" element={<Health_tracker />} />
           <Route path="questionnaire" element={<Questionnaire />} />
+          <Route path="dashboard" element={<Dashboard />} />
         </Route>
-
       </Routes>
     </BrowserRouter>
   );

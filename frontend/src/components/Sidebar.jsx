@@ -1,71 +1,128 @@
-import React, { useState } from "react";
-import {
-  MdDashboard,
-  MdOutlineQrCodeScanner,
-  MdHealthAndSafety,
-  MdSoupKitchen,
-  MdLocationOn,
-  MdSettings,
-  MdLogout,
-} from "react-icons/md";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { 
+  Sparkles, 
+  ChevronUp, 
+  ChevronDown, 
+  Newspaper, 
+  LogOut,
+  User,
+  LayoutDashboard
+} from "lucide-react";
 
 const Sidebar = () => {
-  const [active, setActive] = useState("Dashboard");
+  const [servicesOpen, setServicesOpen] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [user, setUser] = useState({ name: "User", role: "User" });
 
-  const menuItems = [
-    { name: "Dashboard", icon: <MdDashboard size={24} /> },
-    { name: "Scanner", icon: <MdOutlineQrCodeScanner size={24} /> },
-    { name: "Health", icon: <MdHealthAndSafety size={24} /> },
-    { name: "Pantry", icon: <MdSoupKitchen size={24} /> },
-    { name: "Locator", icon: <MdLocationOn size={24} /> },
-  ];
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="fixed left-0 top-0 h-screen bg-[#286459] flex flex-col items-center py-8 text-white transition-all duration-300 w-16 md:w-[100px] z-50 border-r border-white/10">
-      {/* Logo Section */}
-      <div className="mt-15 mb-10 p-2 bg-white/10 rounded-2xl">
-        <div className="w-8 h-8 bg-[#FFE4BB] rounded-lg rotate-45 flex items-center justify-center">
-          <div className="w-4 h-4 bg-[#286459] rounded-sm -rotate-45" />
+    <div className="w-64 bg-[#3A6258] flex flex-col justify-between border-r border-white/10 font-sans min-h-[calc(100vh-72px)]">
+      {/* Navigation Links */}
+      <div className="px-4 pt-8 pb-4 flex flex-col gap-2">
+        
+        {/* Dashboard */}
+        <Link 
+          to="/dashboard" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
+            ${isActive("/dashboard") ? "bg-[#EBE9DE] text-[#3A6258]" : "text-white hover:bg-white/10"}`}
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-lg font-medium">Dashboard</span>
+        </Link>
+
+        {/* AyurSaathi */}
+        <Link 
+          to="/ayursaathi" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
+            ${isActive("/ayursaathi") ? "bg-[#EBE9DE] text-[#3A6258]" : "text-white hover:bg-white/10"}`}
+        >
+          <Sparkles className="w-5 h-5" />
+          <span className="text-lg font-medium">AyurSaathi</span>
+        </Link>
+
+        {/* Services Section */}
+        <div className="mt-2">
+          <button 
+            onClick={() => setServicesOpen(!servicesOpen)}
+            className="flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <User className="w-5 h-5" />
+              <span className="text-lg font-medium">Services</span>
+            </div>
+            {servicesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          
+          {servicesOpen && (
+            <div className="flex flex-col gap-1 mt-1 ml-6 border-l border-white/20 pl-4">
+              {[
+                { name: "Ayur-Pantry", path: "/ayur-pantry" },
+                { name: "Health Tracker", path: "/health-tracker" },
+                { name: "Safety Scanner", path: "/safety-scanner" },
+                { name: "Vaidya Locator", path: "/vaidya-locator" },
+              ].map((item) => (
+                <Link 
+                  key={item.path}
+                  to={item.path} 
+                  className={`block px-3 py-2 rounded-lg text-md transition-all
+                    ${isActive(item.path) 
+                      ? "text-[#FFE4BB] font-bold bg-white/5" 
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                    }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* News Hub */}
+        <Link 
+          to="/news-hub" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group mt-2
+            ${isActive("/news-hub") ? "bg-[#EBE9DE] text-[#3A6258]" : "text-white hover:bg-white/10"}`}
+        >
+          <Newspaper className="w-5 h-5" />
+          <span className="text-lg font-medium">News Hub</span>
+        </Link>
       </div>
 
-      {/* Navigation Items */}
-      <nav className="flex flex-col gap-8 flex-grow">
-        {menuItems.map((item) => (
-          <button
-            key={item.name}
-            onClick={() => setActive(item.name)}
-            className={`flex flex-col items-center gap-1 group transition-all ${
-              active === item.name
-                ? "text-white"
-                : "text-white/40 hover:text-white/70"
-            }`}
-          >
-            <div
-              className={`p-2 rounded-xl transition-all ${
-                active === item.name
-                  ? "bg-white/20 shadow-lg"
-                  : "bg-transparent"
-              }`}
-            >
-              {item.icon}
+      {/* User Profile Card */}
+      <div className="p-4 mb-6">
+        <div className="bg-[#F2F0E9] rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden border-2 border-white">
+               <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" />
             </div>
-            {/* Label: Hidden on mobile, visible and professional on md+ */}
-            <span className="hidden md:block text-[10px] font-black uppercase tracking-tighter">
-              {item.name}
-            </span>
+            <div className="overflow-hidden">
+              <h4 className="text-[#1e1e1e] font-bold text-sm truncate">{user.name}</h4>
+              <p className="text-gray-500 text-xs font-medium">User</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 py-2 rounded-lg transition-colors text-sm font-bold"
+          >
+            <LogOut className="w-4 h-4" /> Logout
           </button>
-        ))}
-      </nav>
-
-      {/* Bottom Actions */}
-      <div className="flex flex-col gap-3 mt-5">
-        <button className="text-white/40 hover:text-white transition-colors">
-          <MdSettings size={24} />
-        </button>
-        <button className="text-red-400 hover:text-red-300 transition-colors">
-          <MdLogout size={24} />
-        </button>
+        </div>
       </div>
     </div>
   );

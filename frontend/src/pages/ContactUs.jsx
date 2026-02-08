@@ -1,8 +1,39 @@
+import { useState } from "react";
+import { sendContactMessage } from "../api"; 
 import meditate from "../assets/loginHero.png";
 
 const ContactUs = () => {
-  const handleSubmit = (e) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
+  const [isSending, setIsSending] = useState(false);
+
+  const handleChange = (e) => {
+    // The name attribute on inputs must match keys in formData
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSending(true);
+
+    try {
+      // We automatically add a subject since the UI has no field for it
+      await sendContactMessage({
+        ...formData,
+        subject: "General Inquiry from Website" 
+      });
+
+      alert("Message sent successfully!");
+      setFormData({ name: "", email: "", message: "" }); // Reset form
+    } catch (error) {
+      console.error(error);
+      alert("Failed to send message. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -35,6 +66,9 @@ const ContactUs = () => {
                 <input
                   required
                   type="text"
+                  name="name" 
+                  value={formData.name}
+                  onChange={handleChange}
                   placeholder="Enter your name"
                   className="w-full bg-transparent border-b border-black/20 py-3 outline-none focus:border-black transition-all placeholder:text-gray-300 text-base"
                 />
@@ -47,6 +81,9 @@ const ContactUs = () => {
                 <input
                   required
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="email@example.com"
                   className="w-full bg-transparent border-b border-black/20 py-3 outline-none focus:border-black transition-all placeholder:text-gray-300 text-base"
                 />
@@ -59,6 +96,9 @@ const ContactUs = () => {
                 <textarea
                   required
                   rows="2"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
                   placeholder="How can we assist you?"
                   className="w-full bg-transparent border-b border-black/20 py-3 outline-none focus:border-black transition-all resize-none placeholder:text-gray-300 text-base"
                 />
@@ -67,9 +107,10 @@ const ContactUs = () => {
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <button
                   type="submit"
-                  className="bg-black text-white px-16 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-gray-800 transition-all hover:shadow-lg active:scale-95 w-full sm:w-auto"
+                  disabled={isSending}
+                  className="bg-black text-white px-16 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-gray-800 transition-all hover:shadow-lg active:scale-95 w-full sm:w-auto disabled:opacity-70 disabled:cursor-wait"
                 >
-                  Send Message
+                  {isSending ? "Sending..." : "Send Message"}
                 </button>
 
                 <div className="hidden lg:flex flex-col">
